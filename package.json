@@ -1,0 +1,23 @@
+{
+  "name": "food-bot",
+  "version": "1.0.0",
+  "description": "A telegram bot that helps me and my coworkers to keep up with each others requirements and capabilities when planning a lunch",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OlegStanKoptev/food-bot.git"
+  },
+  "keywords": [
+    "telegram",
+    "bot"
+  ],
+  "author": "Oleg Koptev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OlegStanKoptev/food-bot/issues"
+  },
+  "homepage": "https://github.com/OlegStanKoptev/food-bot#readme"
+}
