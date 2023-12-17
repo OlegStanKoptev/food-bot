@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/OlegStanKoptev/food-bot/issues"
   },
-  "homepage": "https://github.com/OlegStanKoptev/food-bot#readme"
+  "homepage": "https://github.com/OlegStanKoptev/food-bot#readme",
+  "dependencies": {
+    "splitwise": "^1.0.0",
+    "telegraf": "^4.15.3"
+  }
 }
