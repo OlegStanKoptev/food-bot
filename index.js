@@ -18,6 +18,7 @@ bot.command('order', async (ctx) => await sendOrderPoll(ctx.chat.id));
 bot.command('late_order', async (ctx) => await sendLateOrderPoll(ctx.chat.id));
 bot.command('sirki', async (ctx) => await sendSirki(ctx.chat.id));
 bot.command('eta', async (ctx) => await sendRawEta(ctx.chat.id, ctx.update.message.text));
+bot.command('balance', async (ctx) => await sendBalances(ctx.chat.id));
 
 module.exports.handler = async function (event) {
   const context = !!event.body ? JSON.parse(event.body) : event;
@@ -68,10 +69,10 @@ async function sendSergeyTag(chatId) {
 async function sendOrderPoll(chatId) {
   const { title, options } = config.order_poll;
   await bot.telegram.sendPoll(chatId, title, options, { is_anonymous: false, allows_multiple_answers: true });
-  const debter = await getBiggestDebter();
-  if (!!debter) {
-    await bot.telegram.sendMessage(chatId, 'Похоже что самый большой долг у ' + debter + '. Готовься заказывать :)');
-  }
+  // const debter = await getBiggestDebter();
+  // if (!!debter) {
+  //   await bot.telegram.sendMessage(chatId, 'Похоже что самый большой долг у ' + debter + '. Готовься заказывать :)');
+  // }
 }
 
 async function sendLateOrderPoll(chatId) {
@@ -101,14 +102,26 @@ async function sendMessage(chatId, payload) {
   return await bot.telegram.sendMessage(chatId, payload);
 }
 
-async function getBiggestDebter() {
-  const group = await sw.getGroup({ id: process.env.SW_GROUP });
-  const filtered_members = group.members
+async function getDebters() {
+  return (await sw.getGroup({ id: process.env.SW_GROUP })).members
     .map(m => ({ ...m, ...splitwise_users.find(u => u.id == m.id) }))
     .filter(m => !m.ignore);
-  const members = filtered_members.map(m => ({ ...m, balance: m.balance.find(e => e.currency_code == 'RSD').amount }));
-  if (members.length == 0) { return }
-  const biggestDebt = members.reduce((prev, curr) => Number(prev.balance) < Number(curr.balance) ? prev : curr);
+}
+
+async function sendBalances(chatId) {
+  const debters = await getDebters();
+  if (debters.length == 0) { return }
+  const debtersWithBalances = debters.map(m => ({ ...m, balance: m.balance.find(e => e.currency_code == 'RSD').amount })).sort((a, b) => Number(a.balance) > Number(b.balance) ? 1 : -1);
+  const balances = debtersWithBalances.map(m => `${m.tg}: ${m.balance < 0 ? ('<b>' + m.balance + ' RSD</b>') : ('+' + m.balance + ' RSD')}`).join('\n');
+  const message = 'Текущая ситуация по балансам в SplitWise:\n\n';
+  return await bot.telegram.sendMessage(chatId, message + balances, { parse_mode: 'HTML' });
+}
+
+async function getBiggestDebter() {
+  const debters = (await getDebters())
+    .map(m => ({ ...m, balance: m.balance.find(e => e.currency_code == 'RSD').amount }));
+  if (debters.length == 0) { return }
+  const biggestDebt = debters.reduce((prev, curr) => Number(prev.balance) < Number(curr.balance) ? prev : curr);
   return biggestDebt.tg;
 }
 
